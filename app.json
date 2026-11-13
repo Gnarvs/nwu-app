@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "NWU Student",
+    "slug": "nwu-student",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "nwustudent",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ph.edu.nwu.student"
+    },
+    "android": {
+      "package": "ph.edu.nwu.student",
+      "adaptiveIcon": {
+        "backgroundColor": "#7A0E0E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "NWU Student",
+      "shortName": "NWU",
+      "themeColor": "#7A0E0E",
+      "backgroundColor": "#F7F3EE"
+    },
+    "plugins": ["expo-router", "expo-status-bar", "expo-font"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
