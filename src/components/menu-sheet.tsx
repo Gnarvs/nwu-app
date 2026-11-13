@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -8,7 +7,7 @@ import { student } from '@/data/sampleData';
 import { colors, radius, spacing } from '@/theme';
 
 import { BottomSheet } from './bottom-sheet';
-import { PrimaryButton, Seal, type IconName } from './ui';
+import { Avatar, Icon, PrimaryButton, type IconName } from './ui';
 
 export function MenuSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { pendingEvaluations, signOut } = useAppState();
@@ -29,7 +28,7 @@ export function MenuSheet({ visible, onClose }: { visible: boolean; onClose: () 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <View style={styles.profile}>
-        <Seal size={44} />
+        <Avatar name={`${student.firstName} ${student.lastName}`} size={48} tone="gold" ring />
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>
             {student.firstName} {student.lastName}
@@ -42,7 +41,9 @@ export function MenuSheet({ visible, onClose }: { visible: boolean; onClose: () 
 
       {confirming ? (
         <View style={styles.confirm}>
-          <Text style={styles.confirmTitle}>Sign out of NWU Student?</Text>
+          <Text style={styles.confirmTitle} accessibilityRole="header">
+            Sign out of NWU Student?
+          </Text>
           <Text style={styles.confirmBody}>You will need to sign in again to see your records.</Text>
           <View style={styles.confirmButtons}>
             <View style={{ flex: 1 }}>
@@ -51,6 +52,8 @@ export function MenuSheet({ visible, onClose }: { visible: boolean; onClose: () 
             <View style={{ flex: 1 }}>
               <PrimaryButton
                 label="Sign out"
+                tone="danger"
+                icon="log-out-outline"
                 onPress={() => {
                   onClose();
                   signOut();
@@ -65,6 +68,7 @@ export function MenuSheet({ visible, onClose }: { visible: boolean; onClose: () 
             icon="clipboard-outline"
             label="Faculty evaluation"
             detail={pendingEvaluations > 0 ? `${pendingEvaluations} pending` : 'All done'}
+            detailTone={pendingEvaluations > 0 ? 'gold' : 'success'}
             onPress={() => go('/faculty-evaluation')}
           />
           <MenuItem icon="settings-outline" label="Settings" onPress={() => go('/settings')} />
@@ -79,12 +83,14 @@ function MenuItem({
   icon,
   label,
   detail,
+  detailTone = 'gold',
   danger,
   onPress,
 }: {
   icon: IconName;
   label: string;
   detail?: string;
+  detailTone?: 'gold' | 'success';
   danger?: boolean;
   onPress: () => void;
 }) {
@@ -92,14 +98,20 @@ function MenuItem({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={detail ? `${label}, ${detail}` : label}
       onPress={onPress}
+      android_ripple={{ color: colors.maroonSoft }}
       style={({ pressed }) => [styles.item, pressed && { backgroundColor: colors.background }]}>
       <View style={[styles.itemIcon, { backgroundColor: danger ? colors.dangerSoft : colors.maroonSoft }]}>
-        <Ionicons name={icon} size={20} color={tint} />
+        <Icon name={icon} size={20} color={tint} />
       </View>
       <Text style={[styles.itemLabel, danger && { color: colors.danger }]}>{label}</Text>
-      {detail ? <Text style={styles.itemDetail}>{detail}</Text> : null}
-      {!danger ? <Ionicons name="chevron-forward" size={18} color={colors.textMuted} /> : null}
+      {detail ? (
+        <View style={[styles.itemDetail, detailTone === 'success' && { backgroundColor: colors.successSoft }]}>
+          <Text style={[styles.itemDetailText, detailTone === 'success' && { color: colors.success }]}>{detail}</Text>
+        </View>
+      ) : null}
+      {!danger ? <Icon name="chevron-forward" size={18} color={colors.textMuted} /> : null}
     </Pressable>
   );
 }
@@ -118,6 +130,7 @@ const styles = StyleSheet.create({
   meta: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   list: { gap: 2 },
   item: {
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
@@ -127,7 +140,13 @@ const styles = StyleSheet.create({
   },
   itemIcon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
-  itemDetail: { fontSize: 13, color: colors.goldText, fontWeight: '600' },
+  itemDetail: {
+    backgroundColor: colors.goldSoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  itemDetailText: { fontSize: 12, color: colors.goldText, fontWeight: '700' },
   confirm: { paddingVertical: spacing.sm, gap: spacing.sm },
   confirmTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   confirmBody: { fontSize: 14, color: colors.textMuted },

@@ -27,3 +27,34 @@ export function tuitionTotals(t: Tuition) {
 
   return { gross, discounts, assessment, paid, balance, periods, nextDue };
 }
+
+function toMinutes(hhmm: string) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+
+export type ClassStatus = 'done' | 'now' | 'next' | 'later';
+
+/**
+ * Where each of today's classes stands right now. `classes` must already be
+ * filtered to today and sorted by start time.
+ */
+export function classStatuses<T extends { start: string; end: string }>(classes: T[], now = new Date()) {
+  const mins = now.getHours() * 60 + now.getMinutes();
+  const nextIdx = classes.findIndex((c) => toMinutes(c.start) > mins);
+  return classes.map((c, i) => {
+    let status: ClassStatus = 'later';
+    if (mins >= toMinutes(c.end)) status = 'done';
+    else if (mins >= toMinutes(c.start)) status = 'now';
+    else if (i === nextIdx) status = 'next';
+    return { ...c, status };
+  });
+}
+
+/** "08:00", "09:30" -> "1 hr 30 min" */
+export function duration(start: string, end: string) {
+  const d = toMinutes(end) - toMinutes(start);
+  const h = Math.floor(d / 60);
+  const m = d % 60;
+  return [h ? `${h} hr` : '', m ? `${m} min` : ''].filter(Boolean).join(' ');
+}

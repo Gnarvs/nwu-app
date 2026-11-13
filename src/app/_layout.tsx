@@ -4,6 +4,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppStateProvider, useAppState } from '@/context/app-state';
 import { colors } from '@/theme';
+import { installWebStyles } from '@/web-styles';
+
+installWebStyles();
 
 function RootStack() {
   const { signedIn } = useAppState();

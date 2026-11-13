@@ -1,13 +1,12 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card, Page, Pill, PrimaryButton } from '@/components/ui';
+import { Avatar, Card, Icon, Page, Pill, PrimaryButton, ProgressBar } from '@/components/ui';
 import { useAppState } from '@/context/app-state';
 import { evaluationPeriod, facultyToEvaluate, type FacultyToEvaluate } from '@/data/sampleData';
-import { formatDate, initials } from '@/format';
-import { colors, maxContentWidth, radius, spacing } from '@/theme';
+import { formatDate } from '@/format';
+import { colors, maxContentWidth, minTouch, radius, spacing } from '@/theme';
 
 const SCALE = [
   { value: 1, label: 'Poor' },
@@ -30,18 +29,30 @@ export default function FacultyEvaluationScreen() {
           Rate each instructor before {formatDate(evaluationPeriod.deadline)}. Your answers are anonymous and are
           only shown to the school as a summary.
         </Text>
-        <Text style={styles.introCount}>
-          {done} of {facultyToEvaluate.length} completed
-        </Text>
+        <View style={styles.introProgress}>
+          <View style={{ flex: 1 }}>
+            <ProgressBar
+              value={done / facultyToEvaluate.length}
+              color={colors.maroon}
+              trackColor="rgba(122, 14, 14, 0.12)"
+              label="Evaluations completed"
+            />
+          </View>
+          <Text style={styles.introCount}>
+            {done} of {facultyToEvaluate.length} done
+          </Text>
+        </View>
       </Card>
 
       {facultyToEvaluate.map((f) => {
         const submitted = submittedEvaluations.has(f.id);
         return (
-          <Card key={f.id} onPress={submitted ? undefined : () => setActive(f)} style={styles.row}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials(f.name)}</Text>
-            </View>
+          <Card
+            key={f.id}
+            onPress={submitted ? undefined : () => setActive(f)}
+            accessibilityLabel={`Evaluate ${f.name}, ${f.subjectCode} ${f.subjectTitle}`}
+            style={[styles.row, submitted && styles.rowDone]}>
+            <Avatar name={f.name} size={42} tone={submitted ? 'success' : 'maroon'} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.name}>{f.name}</Text>
               <Text style={styles.subject} numberOfLines={1}>
@@ -53,7 +64,7 @@ export default function FacultyEvaluationScreen() {
             ) : (
               <View style={styles.cta}>
                 <Text style={styles.ctaText}>Evaluate</Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.maroon} />
+                <Icon name="chevron-forward" size={16} color={colors.maroon} />
               </View>
             )}
           </Card>
@@ -71,6 +82,7 @@ function EvaluationForm({ faculty, onClose }: { faculty: FacultyToEvaluate | nul
   const [ratings, setRatings] = useState<Record<number, number>>({});
   const [comment, setComment] = useState('');
   const complete = evaluationPeriod.criteria.every((_, i) => ratings[i]);
+  const rated = evaluationPeriod.criteria.filter((_, i) => ratings[i]).length;
 
   const close = () => {
     setRatings({});
@@ -88,19 +100,28 @@ function EvaluationForm({ faculty, onClose }: { faculty: FacultyToEvaluate | nul
               {faculty?.subjectCode} · {faculty?.subjectTitle}
             </Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={close} hitSlop={12}>
-            <Ionicons name="close" size={26} color={colors.text} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close without submitting"
+            onPress={close}
+            style={({ pressed }) => [styles.close, pressed && { opacity: 0.6 }]}>
+            <Icon name="close" size={26} color={colors.text} />
           </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={[styles.modalBody, { paddingBottom: insets.bottom + spacing.xxl }]}>
-          <Text style={styles.scaleHint}>1 = Poor, 5 = Excellent</Text>
+          <View style={styles.formProgress}>
+            <Text style={styles.formProgressText}>
+              {rated} of {evaluationPeriod.criteria.length} rated
+            </Text>
+            <Text style={styles.scaleHint}>1 = Poor, 5 = Excellent</Text>
+          </View>
           {evaluationPeriod.criteria.map((c, i) => (
             <View key={c} style={styles.criterion}>
               <Text style={styles.criterionText}>
                 {i + 1}. {c}
               </Text>
-              <View style={styles.scale}>
+              <View style={styles.scale} accessibilityRole="radiogroup" accessibilityLabel={c}>
                 {SCALE.map((s) => {
                   const on = ratings[i] === s.value;
                   return (
@@ -110,8 +131,11 @@ function EvaluationForm({ faculty, onClose }: { faculty: FacultyToEvaluate | nul
                       accessibilityState={{ selected: on }}
                       accessibilityLabel={`${s.value}, ${s.label}`}
                       onPress={() => setRatings((r) => ({ ...r, [i]: s.value }))}
-                      style={[styles.scaleBtn, on && styles.scaleBtnOn]}>
+                      style={({ pressed }) => [styles.scaleBtn, on && styles.scaleBtnOn, pressed && !on && styles.scaleBtnPressed]}>
                       <Text style={[styles.scaleNum, on && { color: '#fff' }]}>{s.value}</Text>
+                      <Text style={[styles.scaleLabel, on && { color: colors.gold }]} numberOfLines={1}>
+                        {s.label}
+                      </Text>
                     </Pressable>
                   );
                 })}
@@ -137,7 +161,11 @@ function EvaluationForm({ faculty, onClose }: { faculty: FacultyToEvaluate | nul
               close();
             }}
           />
-          {!complete ? <Text style={styles.scaleHint}>Rate all items to submit.</Text> : null}
+          {!complete ? (
+            <Text style={styles.scaleHint}>
+              Rate {evaluationPeriod.criteria.length - rated} more {evaluationPeriod.criteria.length - rated === 1 ? 'item' : 'items'} to submit.
+            </Text>
+          ) : null}
         </ScrollView>
       </View>
     </Modal>
@@ -148,17 +176,13 @@ const styles = StyleSheet.create({
   intro: { backgroundColor: colors.goldSoft, borderColor: colors.gold, gap: 6 },
   introTitle: { fontSize: 16, fontWeight: '800', color: colors.maroon },
   introBody: { fontSize: 14, color: colors.text, lineHeight: 20 },
-  introCount: { fontSize: 13, fontWeight: '700', color: colors.goldText },
+  introProgress: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xs },
+  introCount: { fontSize: 13, fontWeight: '700', color: colors.goldText, fontVariant: ['tabular-nums'] },
+  rowDone: { backgroundColor: colors.surfaceMuted },
+  close: { width: minTouch, height: minTouch, alignItems: 'center', justifyContent: 'center', marginTop: -10, marginRight: -10 },
+  formProgress: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  formProgressText: { fontSize: 13, fontWeight: '700', color: colors.maroon },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.maroonSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontWeight: '800', color: colors.maroon },
   name: { fontSize: 15, fontWeight: '700', color: colors.text },
   subject: { fontSize: 13, color: colors.textMuted },
   cta: { flexDirection: 'row', alignItems: 'center', gap: 2 },
@@ -183,7 +207,9 @@ const styles = StyleSheet.create({
   scale: { flexDirection: 'row', gap: spacing.sm },
   scaleBtn: {
     flex: 1,
-    height: 44,
+    minHeight: 56,
+    paddingVertical: 6,
+    gap: 2,
     borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -192,7 +218,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scaleBtnOn: { backgroundColor: colors.maroon, borderColor: colors.maroon },
-  scaleNum: { fontSize: 16, fontWeight: '700', color: colors.text },
+  scaleBtnPressed: { backgroundColor: colors.maroonSoft },
+  scaleNum: { fontSize: 17, fontWeight: '800', color: colors.text },
+  scaleLabel: { fontSize: 10, fontWeight: '600', color: colors.textMuted },
   input: {
     minHeight: 100,
     backgroundColor: colors.surface,

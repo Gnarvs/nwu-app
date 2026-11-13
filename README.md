@@ -16,14 +16,24 @@ Everything in the app is **sample data**. No real student records are used.
 | Messages | Inbox with unread state; tap a message to read it |
 | Menu (pinned tab) | Bottom sheet with Faculty evaluation, Settings and Sign out |
 
-The bottom tab bar scrolls sideways when the tabs don't fit, and the Menu button stays pinned on the right.
+The bottom tab bar scrolls sideways when the tabs don't fit, and the Menu button stays pinned on the right. On narrow phones the tabs are sized so the last visible one is cut in half, and a fade on the edge shows there is more to scroll. On wider screens all six tabs fit in one row.
+
+## UI notes
+
+- Home shows an "Up next" or "In class now" card for today's classes, and each class gets a Now / Up next / Done label based on the device clock.
+- Schedule has a Mon to Sat picker that always fits the screen width. Dots under each day show how many classes it has.
+- Tuition has a segmented progress bar (one segment per installment), a payment timeline, and a fee breakdown you can expand or collapse.
+- Clearance and Messages have filter chips with counts. Offices with obligations are listed first.
+- Animations respect the system "reduce motion" setting (`src/hooks/use-reduced-motion.ts`).
+- On the web, keyboard users get a gold focus ring (`src/web-styles.ts`).
+- Shared building blocks (cards, pills, chips, progress bar, avatar, collapsible, empty state) are in `src/components/ui.tsx`.
 
 ## Brand colors
 
 - Maroon `#7A0E0E`
 - Gold `#F2B705`
 
-All colors live in `src/theme.ts`.
+All colors live in `src/theme.ts`, along with spacing, radius, icon sizes and animation timings.
 
 ## Running it
 
@@ -98,12 +108,14 @@ src/
     sign-in.tsx
   components/           tab bar, menu sheet, dropdown, shared UI
   context/app-state.tsx in-memory sign-in, read messages, evaluations, settings
+  hooks/                use-reduced-motion
   data/
     sampleData.ts       ALL app data (replace this file later)
     types.ts            data shapes
   format.ts             peso, date, time and grade formatting
-  selectors.ts          derived values (tuition totals, today's weekday)
-  theme.ts              colors and spacing
+  selectors.ts          derived values (tuition totals, today's weekday, class status)
+  theme.ts              colors, spacing, radius, motion timings
+  web-styles.ts         web-only CSS (focus ring, reduced motion)
 ```
 
 ## Notes

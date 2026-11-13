@@ -2,10 +2,10 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Card, Page } from '@/components/ui';
+import { Avatar, Card, EmptyState, Page } from '@/components/ui';
 import { useAppState } from '@/context/app-state';
 import { messages } from '@/data/sampleData';
-import { formatDate, formatTime, initials } from '@/format';
+import { formatDate, formatTime } from '@/format';
 import { colors, spacing } from '@/theme';
 
 export default function MessageScreen() {
@@ -20,7 +20,9 @@ export default function MessageScreen() {
   if (!message) {
     return (
       <Page>
-        <Text style={styles.missing}>This message could not be found.</Text>
+        <Card>
+          <EmptyState icon="mail-unread-outline" title="Message not found" body="It may have been removed." />
+        </Card>
       </Page>
     );
   }
@@ -32,11 +34,11 @@ export default function MessageScreen() {
     <Page>
       <Stack.Screen options={{ title: message.from }} />
       <Card>
-        <Text style={styles.subject}>{message.subject}</Text>
+        <Text style={styles.subject} accessibilityRole="header">
+          {message.subject}
+        </Text>
         <View style={styles.sender}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials(message.from)}</Text>
-          </View>
+          <Avatar name={message.from} tone="gold" ring />
           <View style={{ flex: 1 }}>
             <Text style={styles.from}>{message.from}</Text>
             <Text style={styles.role}>{message.role}</Text>
@@ -54,23 +56,11 @@ export default function MessageScreen() {
 }
 
 const styles = StyleSheet.create({
-  missing: { color: colors.textMuted, textAlign: 'center', marginTop: spacing.xxl },
-  subject: { fontSize: 20, fontWeight: '800', color: colors.text },
+  subject: { fontSize: 20, fontWeight: '800', color: colors.text, lineHeight: 26 },
   sender: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.lg },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.goldSoft,
-    borderWidth: 2,
-    borderColor: colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontSize: 15, fontWeight: '800', color: colors.maroon },
   from: { fontSize: 15, fontWeight: '700', color: colors.text },
   role: { fontSize: 13, color: colors.textMuted },
   date: { fontSize: 12, color: colors.textMuted },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: spacing.lg },
-  body: { fontSize: 15, color: colors.text, lineHeight: 23 },
+  body: { fontSize: 16, color: colors.text, lineHeight: 25, maxWidth: 640 },
 });
